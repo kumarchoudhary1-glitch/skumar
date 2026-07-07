@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shailendra Kumar Choudhary | Enterprise IT Consultant</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #020408;
+            --card-bg: rgba(10, 18, 32, 0.55);
+            --neon-cyan: #00f2ff;
+            --fire-orange: #ff5500;
+            --text-light: #ffffff;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-light);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 3D Globe Background Canvas */
+        #globe-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* High-Volume Audio Button */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0 12px;
+            width: 100%;
+            gap: 12px;
+        }
+
+        .profile-btn,
+        .audio-btn {
+            background: rgba(2, 5, 10, 0.9);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.25);
+            border-radius: 22px;
+            padding: 8px 16px;
+            font-size: 11px;
+        }
+
+        .profile-btn {
+            min-width: 110px;
+        }
+
+        .audio-btn {
+            min-width: 120px;
+        }
+
+        .profile-btn:hover,
+        .audio-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            box-shadow: 0 0 28px var(--neon-cyan);
+        }
+
+        .audio-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            box-shadow: 0 0 50px var(--neon-cyan);
+            transform: scale(1.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 25px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 5.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #fff 10%, var(--fire-orange) 50%, var(--neon-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 50px rgba(255, 85, 0, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .hero h2 {
+            font-size: 1.6rem;
+            color: var(--neon-cyan);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+        }
+
+        .shatter-shard {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px var(--neon-cyan);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Section Headings */
+        .section-title {
+            font-size: 2.8rem;
+            margin: 140px 0 60px 0;
+            display: inline-block;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+        }
+
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: -15px; left: 0;
+            width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--fire-orange));
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* Heavy 3D Magnetic Cards */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 40px;
+            perspective: 2000px;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(0, 242, 255, 0.2);
+            border-radius: 24px;
+            padding: 45px;
+            backdrop-filter: blur(25px);
+            transform-style: preserve-3d;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            will-change: transform;
+            opacity: 0;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0, 242, 255, 0.08);
+        }
+
+        .glass-card:hover {
+            border-color: var(--fire-orange);
+            box-shadow: 0 30px 70px rgba(255, 85, 0, 0.25), 0 0 40px rgba(0, 242, 255, 0.3);
+        }
+
+        .glass-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            color: #fff;
+            transform: translateZ(50px);
+        }
+
+        .glass-card ul { list-style: none; transform: translateZ(35px); }
+        .glass-card ul li {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+        .glass-card ul li::before {
+            content: "🔥"; position: absolute; left: 0; top: 1px; font-size: 0.9rem;
+        }
+
+        /* Dynamic Timeline */
+        .timeline-container {
+            border-left: 2px solid var(--neon-cyan);
+            padding-left: 45px;
+            margin-left: 20px;
+            perspective: 1200px;
+            box-shadow: -5px 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .timeline-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(0, 242, 255, 0.2);
+            padding: 45px;
+            border-radius: 24px;
+            margin-bottom: 55px;
+            position: relative;
+            backdrop-filter: blur(25px);
+            transform-style: preserve-3d;
+            opacity: 0;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .timeline-card::before {
+            content: "";
+            position: absolute;
+            left: -53px; top: 45px;
+            width: 16px; height: 16px;
+            background: var(--fire-orange);
+            border: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 25px var(--fire-orange), 0 0 0 6px rgba(255, 85, 0, 0.3);
+            transition: 0.3s;
+        }
+
+        .timeline-card:hover { border-color: var(--neon-cyan); box-shadow: 0 20px 50px rgba(0, 242, 255, 0.3); }
+        .timeline-card:hover::before { transform: scale(1.6); background: var(--neon-cyan); }
+
+        .timeline-role { font-size: 1.9rem; font-weight: 900; color: #fff; transform: translateZ(45px); }
+        .timeline-company { font-size: 1.3rem; color: var(--neon-cyan); margin: 10px 0; font-weight: 700; transform: translateZ(35px); }
+        .timeline-date { font-size: 1rem; color: var(--text-dim); margin-bottom: 25px; transform: translateZ(25px); }
+        
+        .timeline-card ul { list-style: none; transform: translateZ(25px); }
+        .timeline-card ul li { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 12px; padding-left: 22px; position: relative; line-height: 1.6; }
+        .timeline-card ul li::before { content: "⚡"; color: var(--fire-orange); position: absolute; left: 0; }
+
+        /* Contact Section */
+        .btn-premium {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--fire-orange), var(--neon-cyan));
+            color: #000;
+            padding: 18px 45px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 35px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 85, 0, 0.5);
+        }
+
+        .btn-premium:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px var(--neon-cyan), 0 0 40px var(--fire-orange);
+        }
+
+        .whatsapp-float-btn {
+            position: fixed;
+            right: 24px;
+            bottom: 28px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #25d366;
+            color: #020408;
+            text-decoration: none;
+            font-weight: 700;
+            padding: 14px 18px;
+            border-radius: 999px;
+            box-shadow: 0 20px 50px rgba(37, 211, 102, 0.25);
+            z-index: 9999;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .whatsapp-float-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 60px rgba(37, 211, 102, 0.35);
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                min-height: auto;
+                padding: 60px 20px 40px;
+            }
+            .top-bar {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 12px 0;
+            }
+            .profile-btn,
+            .audio-btn {
+                width: 100%;
+                max-width: 240px;
+                text-align: center;
+                font-size: 10px;
+                padding: 8px 12px;
+            }
+            .hero h1 { font-size: 2.75rem; }
+            .hero h2 { font-size: 1rem; letter-spacing: 2px; }
+            .grid-layout { gap: 24px; }
+            .glass-card, .timeline-card { padding: 28px; }
+            .btn-premium { padding: 14px 28px; }
+            .timeline-container { padding-left: 20px; margin-left: 10px; }
+            .timeline-card::before { left: -28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Globe Canvas Element -->
+    <canvas id="globe-canvas"></canvas>
+
+    <div class="container">
+        <div class="top-bar">
+            <button class="profile-btn" id="profileBtn">Profile</button>
+            <button class="audio-btn" id="soundBtn">🔊 SOUND ON</button>
+        </div>
+        
+        <!-- HERO -->
+        <section class="hero">
+            <h1 id="hero-title">Shailendra Kumar Choudhary</h1>
+            <h2 id="hero-subtitle">Enterprise IT Infrastructure Consultant</h2>
+            <a href="#contact" class="btn-premium hero-contact-btn">GET IN TOUCH</a>
+        </section>
+
+        <!-- CORE COMPETENCIES -->
+        <section>
+            <h2 class="section-title">Core Competencies</h2>
+            <div class="grid-layout">
+                <div class="glass-card animate-3d">
+                    <h3>🌐 Web Development & Architecture</h3>
+                    <ul>
+                        <li>Full-stack development with React, Vue.js, Angular, and Node.js ecosystems with 10+ years expertise.</li>
+                        <li>Enterprise-grade web applications with microservices architecture, REST APIs, and GraphQL integration.</li>
+                        <li>High-performance optimization: lazy loading, CDN integration, server-side rendering achieving 95+ Lighthouse scores.</li>
+                        <li>Building responsive PWA (Progressive Web Applications) with offline-first capabilities.</li>
+                    </ul>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3>📱 Mobile & Cross-Platform Apps</h3>
+                    <ul>
+                        <li>Native iOS/Android development and React Native/Flutter cross-platform solutions deployed to 50k+ users.</li>
+                        <li>Enterprise app distribution, push notifications, offline sync, and real-time collaboration features.</li>
+                        <li>App Store optimization (ASO), performance profiling, and user analytics integration.</li>
+                        <li>Backend API design for mobile-first architectures with authentication (OAuth 2.0, JWT).</li>
+                    </ul>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3>🤖 AI, Automation & AIBOS</h3>
+                    <ul>
+                        <li>Deploying Claude API, GPT-4, and Gemini-powered AI agents for document processing and business intelligence.</li>
+                        <li>RPA implementation using UiPath, Automation Anywhere reducing manual workflows by 70-80%.</li>
+                        <li>Building AI Business Operating Systems (AIBOS) with intelligent workflow orchestration.</li>
+                        <li>Prompt engineering, fine-tuning models, and LLM integration for enterprise automation.</li>
+                    </ul>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3>🤝 CRM, ERP & Sales Optimization</h3>
+                    <ul>
+                        <li>Salesforce, HubSpot, Zoho CRM configuration managing 100k+ customer records with custom modules.</li>
+                        <li>Sales funnel optimization increasing conversion rates by 40-60% through data-driven strategies.</li>
+                        <li>Lead scoring automation, nurture workflows, and multi-channel campaign orchestration.</li>
+                        <li>SAP, Oracle ERP implementation and business process optimization across departments.</li>
+                    </ul>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3>⚙️ IT Infrastructure & Enterprise Systems</h3>
+                    <ul>
+                        <li>On-premises and hybrid infrastructure: virtualization, clustering, load balancing, disaster recovery planning.</li>
+                        <li>Enterprise hardware procurement (servers, storage, networking) and lifecycle management for 500+ endpoints.</li>
+                        <li>CCTV systems (4K HD), biometric access control, EPBX telephony, and integrated physical security.</li>
+                        <li>Network design, security hardening, compliance frameworks (ISO 27001, SOC 2).</li>
+                    </ul>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3>☁️ Cloud & Cybersecurity Excellence</h3>
+                    <ul>
+                        <li>Microsoft 365 ecosystem: Exchange Online, Teams, Sharepoint, Azure AD managing 1000+ users.</li>
+                        <li>AWS and Google Cloud Platform: EC2, S3, RDS, Lambda, serverless architecture design.</li>
+                        <li>Email security: SPF, DKIM, DMARC, DMARC policy optimization achieving 99.9% deliverability.</li>
+                        <li>Threat detection, incident response, backup & disaster recovery (RTO/RPO optimization).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPERIENCE -->
+        <section>
+            <h2 class="section-title">Professional Experience</h2>
+            <div class="timeline-container">
+                
+                <div class="timeline-card animate-3d">
+                    <div class="timeline-role">Founder & Enterprise IT Solutions Consultant</div>
+                    <div class="timeline-company">WebDrave - Digital Transformation Hub</div>
+                    <div class="timeline-date">Feb 2025 - Present | Delhi NCR, India</div>
+                    <ul>
+                        <li>Founded WebDrave as a premier IT consulting firm delivering end-to-end digital transformation, web/app development, and AI-powered automation across India, Southeast Asia, and global markets.</li>
+                        <li>Managing 15+ enterprise clients with combined annual revenue of ₹50+ crores, providing strategic IT consulting and infrastructure design.</li>
+                        <li>Architected AIBOS (AI Business Operating Systems) for 8 Fortune 500-adjacent companies, reducing operational costs by 35-45%.</li>
+                        <li>Led cloud migration projects (AWS, Azure, GCP) managing 500+ TB data with zero downtime deployments.</li>
+                        <li>Building in-house AI agent development framework using Claude API and Gemini for document processing and business intelligence.</li>
+                    </ul>
+                </div>
+
+                <div class="timeline-card animate-3d">
+                    <div class="timeline-role">Sr. Manager - IT Infrastructure, Operations & HR</div>
+                    <div class="timeline-company">Pulp Strategy Communications Pvt. Ltd.</div>
+                    <div class="timeline-date">Oct 2012 - Feb 2026 | Delhi NCR, India</div>
+                    <ul>
+                        <li>Led enterprise-wide IT operations for 400+ employees across Delhi HQ, managing endpoints (Windows/Mac/Linux).</li>
+                        <li>Designed and implemented hybrid cloud infrastructure (Office 365 + Google Workspace) managing 50k+ daily emails with 99.9% uptime.</li>
+                        <li>Administered advanced security: implemented zero-trust network architecture, EDR solutions, reducing cyber incidents by 85%.</li>
+                        <li>Deployed integrated facility management: EPBX telephony (200+ extensions), 64-camera CCTV network, biometric access control, visitor management.</li>
+                        <li>Managed IT asset lifecycle and procurement, negotiating vendor contracts saving 25% annually.</li>
+                        <li>Architected disaster recovery and business continuity plan (RTO: 4 hours, RPO: 1 hour) tested quarterly.</li>
+                        <li>Led cross-functional HR coordination: employee IT onboarding automation, software licensing compliance, IT policy development.</li>
+                    </ul>
+                </div>
+
+                <div class="timeline-card animate-3d">
+                    <div class="timeline-role">IT Executive & Systems Administrator</div>
+                    <div class="timeline-company">Dainik Jagran</div>
+                    <div class="timeline-date">Jun 2007 - Oct 2012 | Greater Delhi Area, India</div>
+                    <ul>
+                        <li>Managed IT infrastructure supporting newspaper production, print workflow, and distribution across 12 regional centers.</li>
+                        <li>Administered Windows/Mac systems, installed printers, networking equipment supporting 200+ newsroom employees.</li>
+                        <li>Implemented backup systems ensuring publication deadline continuity with automated daily backups.</li>
+                        <li>Provided helpdesk support and troubleshooting for Windows/Mac environments, reducing downtime by 60%.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CERTIFICATIONS -->
+        <section>
+            <h2 class="section-title">Key Achievements & Awards</h2>
+            <div class="grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--fire-orange); transform: translateZ(30px);">🏆 Digital Transformation Leader</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Led 8 successful enterprise digital transformations, reducing operational costs by 35-45% and increasing efficiency by 2x.</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--neon-cyan); transform: translateZ(30px);">🎯 Cloud Migration Expert</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Orchestrated 12+ enterprise cloud migrations (AWS, Azure, GCP) managing 500+ TB data with zero downtime deployments.</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--fire-orange); transform: translateZ(30px);">🤖 AI Innovation Pioneer</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Implemented 15+ AI agent deployments using Claude API, GPT-4, and Gemini, automating complex business workflows.</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--neon-cyan); transform: translateZ(30px);">🔒 Security Excellence</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Designed zero-trust security frameworks reducing cyber incidents by 85%, achieving ISO 27001 and SOC 2 compliance.</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--fire-orange); transform: translateZ(30px);">💼 Enterprise CRM Specialist</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Implemented Salesforce/HubSpot for 20+ companies managing 500k+ customer records, increasing sales by 40-60%.</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 35px;">
+                    <h3 style="border:none; margin-bottom: 15px; font-size: 1.3rem; color: var(--neon-cyan); transform: translateZ(30px);">📱 Product Development</h3>
+                    <p style="color: var(--text-dim); transform: translateZ(15px); line-height: 1.6;">Developed 30+ web and mobile applications deployed to 200k+ users across India and international markets.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CERTIFICATIONS & EDUCATION -->
+        <section>
+            <h2 class="section-title">Certifications & Continuous Learning</h2>
+            <div class="grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Building with the Claude API</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Anthropic</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2026 • Advanced LLM Integration</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">AI Fluency Framework</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Anthropic</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2026 • AI Strategy & Implementation</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">AWS Solutions Architect</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Amazon Web Services</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2025 • Professional Level</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">AI Fundamentals</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">IBM SkillsBuild</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2025 • ML & AI Basics</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Cloud Computing Fundamentals</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Simplilearn</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2025 • Multi-Cloud Architecture</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Enterprise Hardware & Networks</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Cisco & CompTIA</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2025 • CCNA & Network+</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Diploma - Electrical Engineering</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Jharkhand Eng. Institute</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2005 • 3-Year Diploma</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Microsoft 365 Administration</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Microsoft Official</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">2024 • Expert Certification</p>
+                </div>
+                <div class="glass-card animate-3d" style="padding: 25px; text-align: center;">
+                    <h3 style="border:none; margin-bottom: 8px; font-size: 1.15rem; transform: translateZ(30px);">Continuous Learning Dedication</h3>
+                    <p style="color: var(--neon-cyan); font-size: 0.95rem; transform: translateZ(15px); margin-bottom: 5px;">Industry Excellence</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; transform: translateZ(15px);">Ongoing • 40+ Courses Completed</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TECHNICAL STACK -->
+        <section>
+            <h2 class="section-title">Core Technical Stack</h2>
+            <div class="grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">💻 Frontend</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">React.js • Vue.js • Angular • TypeScript • Tailwind CSS • Three.js • GSAP • Webpack</p>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">⚙️ Backend</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">Node.js • Python • Java • C# • Go • REST APIs • GraphQL • Express • Django</p>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">🗄️ Databases</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">PostgreSQL • MongoDB • MySQL • Redis • Elasticsearch • Firebase • DynamoDB</p>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">☁️ Cloud Platforms</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">AWS (EC2, S3, Lambda, RDS) • Azure • Google Cloud Platform • Docker • Kubernetes</p>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">🤖 AI/ML Tools</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">Claude API • GPT-4 • Gemini • LangChain • Anthropic SDK • TensorFlow • Scikit-learn</p>
+                </div>
+                <div class="glass-card animate-3d">
+                    <h3 style="font-size: 1.4rem; margin-bottom: 20px;">🛠️ DevOps & Tools</h3>
+                    <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.05rem;">Git • GitHub • GitLab • Jenkins • CI/CD • Terraform • Ansible • Linux</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section id="contact" style="margin-bottom: 120px; text-align: center;">
+            <h2 class="section-title" style="border:none; padding:0;">Ready to Transform Your Business? Let's Connect</h2>
+            <div class="glass-card animate-3d" style="max-width: 700px; margin: 40px auto 0; text-align: center;">
+                <p style="font-size: 1.15rem; margin-bottom: 12px; color: var(--text-dim);">📍 Location</p>
+                <p style="font-size: 1.3rem; margin-bottom: 25px; font-weight: 600;">Delhi NCR, India | Available for Global Consultations</p>
+                
+                <p style="font-size: 1.15rem; margin-bottom: 12px; color: var(--text-dim);">✉️ Email</p>
+                <p style="font-size: 1.3rem; margin-bottom: 25px; font-weight: 600;">kumar.choudhary1@gmail.com</p>
+                
+                <p style="font-size: 1.15rem; margin-bottom: 12px; color: var(--text-dim);">🟢 WhatsApp</p>
+                <p style="font-size: 1.3rem; margin-bottom: 30px; font-weight: 600;">+91 8384004787</p>
+                
+                <p style="font-size: 0.95rem; color: var(--text-dim); margin-bottom: 25px; line-height: 1.6;">Available for: Enterprise Consulting • Digital Transformation • Custom Development • AI Integration • Cloud Migration</p>
+                
+                <a href="https://linkedin.com/in/shailendrawebdrave" target="_blank" class="btn-premium">Connect on LinkedIn</a>
+                <a href="mailto:kumar.choudhary1@gmail.com" class="btn-premium" style="margin-left: 15px; background: linear-gradient(135deg, var(--neon-cyan), var(--fire-orange)); display: inline-block;">Send Email</a>
+            </div>
+        </section>
+
+        <a href="https://wa.me/918384004787" target="_blank" rel="noreferrer" class="whatsapp-float-btn">
+            <span>🟢</span>
+            <span>Chat on WhatsApp</span>
+        </a>
+    </div>
+
+    <script>
+        // --- 1. THREE.JS 3D ROTATING GLOBE BACKGROUND (ENHANCED) ---
+        const canvas = document.getElementById('globe-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Create multiple globe layers for depth
+        const globeGeometry = new THREE.SphereGeometry(3.8, 64, 64);
+        const globeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00f2ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25
+        });
+        const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+        scene.add(globe);
+
+        // Add second globe layer for visual depth
+        const globeGeometry2 = new THREE.SphereGeometry(3.5, 32, 32);
+        const globeMaterial2 = new THREE.MeshBasicMaterial({
+            color: 0xff5500,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const globe2 = new THREE.Mesh(globeGeometry2, globeMaterial2);
+        scene.add(globe2);
+
+        // Enhanced particle field with more particles and dynamics
+        const particleCount = 500;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePos = new Float32Array(particleCount * 3);
+        const particleVel = new Float32Array(particleCount * 3);
+        
+        for(let i=0; i<particleCount*3; i++) {
+            particlePos[i] = (Math.random() - 0.5) * 25;
+            particleVel[i] = (Math.random() - 0.5) * 0.15;
+        }
+        
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+        const particleMat = new THREE.PointsMaterial({ 
+            color: 0xff5500, 
+            size: 0.15,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+        const particleField = new THREE.Points(particleGeo, particleMat);
+        scene.add(particleField);
+
+        // Cyber connection lines
+        const lineGeometry = new THREE.BufferGeometry();
+        const linePositions = new Float32Array(300);
+        for(let i = 0; i < 300; i++) {
+            linePositions[i] = (Math.random() - 0.5) * 20;
+        }
+        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        const lineMat = new THREE.LineBasicMaterial({ 
+            color: 0x00f2ff, 
+            transparent: true, 
+            opacity: 0.15,
+            linewidth: 1
+        });
+        const lines = new THREE.LineSegments(lineGeometry, lineMat);
+        scene.add(lines);
+
+        camera.position.z = 8;
+
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.004;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.004;
+        });
+
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+            
+            globe.rotation.y += 0.004 + mouseX * 0.5;
+            globe.rotation.x += (mouseY - globe.rotation.x) * 0.08;
+            
+            globe2.rotation.y -= 0.006 - mouseX * 0.3;
+            globe2.rotation.z += (mouseY - globe2.rotation.z) * 0.06;
+            
+            particleField.rotation.y -= 0.0025;
+            lines.rotation.x += 0.001;
+            lines.rotation.z += 0.0015;
+            
+            renderer.render(scene, camera);
+        }
+        animateThree();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 2. GLASS SHATTER & FIRE EFFECT ON HERO ENTRY (ENHANCED) ---
+        function triggerShatterAndFire() {
+            const title = document.getElementById('hero-title');
+            for(let i=0; i<50; i++) {
+                let shard = document.createElement('div');
+                shard.className = 'shatter-shard';
+                let size = Math.random() * 30 + 12;
+                shard.style.width = size + 'px';
+                shard.style.height = size + 'px';
+                shard.style.left = (window.innerWidth / 2 + (Math.random() - 0.5) * 500) + 'px';
+                shard.style.top = (window.innerHeight / 2 + (Math.random() - 0.5) * 300) + 'px';
+                shard.style.background = Math.random() > 0.5 ? 'rgba(0, 242, 255, 0.9)' : 'rgba(255, 85, 0, 0.9)';
+                document.body.appendChild(shard);
+
+                gsap.to(shard, {
+                    x: (Math.random() - 0.5) * 900,
+                    y: (Math.random() - 0.5) * 900,
+                    rotation: Math.random() * 1080,
+                    opacity: 0,
+                    duration: 1.8,
+                    ease: "power2.out",
+                    onComplete: () => shard.remove()
+                });
+            }
+
+            gsap.fromTo(title, 
+                { scale: 0.5, textShadow: "0 0 100px #ff5500" }, 
+                { scale: 1, textShadow: "0 0 50px rgba(255, 85, 0, 0.4)", duration: 2, ease: "elastic.out(1, 0.3)" }
+            );
+        }
+        triggerShatterAndFire();
+
+        // --- 3. GSAP 3D SCROLL ANIMATIONS (OPTIMIZED) ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.utils.toArray('.animate-3d').forEach((card, index) => {
+            gsap.fromTo(card, 
+                { opacity: 0, y: 120, rotationX: 35, transformPerspective: 1000 }, 
+                { 
+                    opacity: 1, y: 0, rotationX: 0, duration: 1.4, ease: "power4.out",
+                    delay: index * 0.08,
+                    scrollTrigger: { trigger: card, start: "top 80%" }
+                }
+            );
+        });
+
+        // --- 4. HEAVY 3D MAGNETIC HOVER (ENHANCED) ---
+        document.querySelectorAll('.glass-card, .timeline-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                let rect = card.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
+                let centerX = rect.width / 2;
+                let centerY = rect.height / 2;
+                let rotateX = ((y - centerY) / centerY) * -18; 
+                let rotateY = ((x - centerX) / centerX) * 18;
+                let distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                let scale = 1 + (distance / Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2))) * 0.08;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(${scale}, ${scale}, 1.05)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+            });
+        });
+
+        // --- 5. ENHANCED AUDIO API WITH VISUAL FEEDBACK ---
+        let audioCtx = null;
+        let soundOn = true;
+
+        function initAudioContext() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            audioCtx = new AudioContext();
+        }
+
+        function ensureAudioReady() {
+            if (!audioCtx) initAudioContext();
+            if (!audioCtx) return false;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return true;
+        }
+
+        function playGlassShatter() {
+            if (!soundOn) return;
+            if (!ensureAudioReady()) return;
+
+            const duration = 0.7;
+            const bufferLength = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferLength, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferLength; i++) {
+                const t = i / bufferLength;
+                const envelope = Math.pow(1 - t, 3.5);
+                const impact = Math.sin(2 * Math.PI * 180 * i / audioCtx.sampleRate) * Math.pow(1 - t, 1.4);
+                const click = Math.sin(2 * Math.PI * 1200 * i / audioCtx.sampleRate) * Math.pow(1 - t, 4) * 0.15;
+                const noise = (Math.random() * 2 - 1) * Math.pow(1 - t, 2) * 0.22;
+                const body = Math.sin(2 * Math.PI * 70 * i / audioCtx.sampleRate) * Math.pow(1 - t, 1.9) * 0.3;
+                data[i] = (impact * envelope * 0.8 + click + noise + body) * 0.85;
+            }
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+
+            const lowpass = audioCtx.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.setValueAtTime(2800, audioCtx.currentTime);
+            lowpass.frequency.exponentialRampToValueAtTime(850, audioCtx.currentTime + duration);
+
+            const highpass = audioCtx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.setValueAtTime(220, audioCtx.currentTime);
+
+            const eq = audioCtx.createBiquadFilter();
+            eq.type = 'peaking';
+            eq.frequency.value = 800;
+            eq.gain.value = 3;
+            eq.Q.value = 1.5;
+
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
+            compressor.knee.setValueAtTime(18, audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(3.5, audioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.008, audioCtx.currentTime);
+            compressor.release.setValueAtTime(0.18, audioCtx.currentTime);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.45, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+            source.connect(lowpass);
+            lowpass.connect(highpass);
+            highpass.connect(eq);
+            eq.connect(compressor);
+            compressor.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            source.start();
+            source.stop(audioCtx.currentTime + duration);
+        }
+
+        function playLoudTick() {
+            if (!soundOn) return;
+            if (!ensureAudioReady()) return;
+
+            const duration = 0.5;
+            const bufferLength = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferLength, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Sport bike engine sound with RPM acceleration
+            for (let i = 0; i < bufferLength; i++) {
+                const t = i / audioCtx.sampleRate;
+                const progress = t / duration;
+                
+                // RPM sweep from 4000Hz to 12000Hz (engine acceleration)
+                const baseFreq = 4000 + progress * 8000;
+                
+                // Primary engine whine (fundamental frequency)
+                const engine = Math.sin(2 * Math.PI * baseFreq * t) * 0.6;
+                
+                // Harmonic overtones (higher frequencies for aggressive bike sound)
+                const harmonic1 = Math.sin(2 * Math.PI * baseFreq * 2.5 * t) * 0.25;
+                const harmonic2 = Math.sin(2 * Math.PI * baseFreq * 1.7 * t) * 0.15;
+                
+                // RPM pulsation (engine cylinders firing)
+                const pulseFreq = 80 + progress * 200; // RPM-like pulse
+                const pulse = Math.sin(2 * Math.PI * pulseFreq * t) * 0.3;
+                
+                // Combine all components
+                const sample = engine + harmonic1 + harmonic2 + pulse;
+                
+                // Aggressive envelope (quick attack, sustain)
+                const envelope = progress < 0.15 ? progress / 0.15 : 0.8 + progress * 0.2;
+                
+                data[i] = sample * envelope * 0.4;
+            }
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+
+            // EQ for bike sound (boost mids and highs)
+            const highpass = audioCtx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+            const eq = audioCtx.createBiquadFilter();
+            eq.type = 'peaking';
+            eq.frequency.setValueAtTime(3000, audioCtx.currentTime);
+            eq.gain.setValueAtTime(8, audioCtx.currentTime);
+            eq.Q.setValueAtTime(2, audioCtx.currentTime);
+
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(8, audioCtx.currentTime);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.1, audioCtx.currentTime + duration);
+
+            source.connect(highpass);
+            highpass.connect(eq);
+            eq.connect(compressor);
+            compressor.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            source.start();
+            source.stop(audioCtx.currentTime + duration);
+        }
+
+        document.querySelectorAll('.glass-card, .timeline-card, .btn-premium, .hero-contact-btn').forEach(el => {
+            el.addEventListener('mouseenter', playLoudTick);
+        });
+
+        document.addEventListener('click', function initOnFirstClick() {
+            initAudioContext();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            document.removeEventListener('click', initOnFirstClick);
+        });
+
+        document.getElementById('profileBtn').addEventListener('click', function() {
+            document.getElementById('hero-title').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('soundBtn').addEventListener('click', function() {
+            initAudioContext();
+            if (!audioCtx) return;
+
+            audioCtx.resume().then(() => {
+                soundOn = !soundOn;
+                this.innerText = soundOn ? "🔊 SOUND ON" : "🔇 SOUND OFF";
+                this.style.color = soundOn ? "#020408" : "var(--neon-cyan)";
+                this.style.background = soundOn ? "var(--neon-cyan)" : "rgba(2, 5, 10, 0.8)";
+                this.style.boxShadow = soundOn ? "0 0 50px var(--neon-cyan)" : "0 0 25px rgba(0, 242, 255, 0.4)";
+            });
+        });
+    </script>
+</body>
+</html>
